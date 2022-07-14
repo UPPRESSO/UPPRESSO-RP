@@ -31,9 +31,11 @@ public class UPPRESSOController {
 
 
     @RequestMapping(value = "/redir", method = RequestMethod.GET)
-    public ModelAndView redir(){
+    public ModelAndView redir(HttpServletResponse response){
+        response.setHeader("Referrer-Policy", "no-referrer");
         return new ModelAndView("redirect:" + Configuration.scriptRedirectUri);
     }
+
 
 
     @RequestMapping(value = "/startNegotiation", method = RequestMethod.POST)
