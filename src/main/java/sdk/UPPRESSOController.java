@@ -3,6 +3,9 @@ package sdk;
 import com.alibaba.fastjson.JSONObject;
 import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.codec.digest.DigestUtils;
+import org.bouncycastle.asn1.sec.SECNamedCurves;
+import org.bouncycastle.asn1.x9.X9ECParameters;
+import org.bouncycastle.math.ec.ECPoint;
 import sdk.Bean.*;
 import com.google.gson.Gson;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -10,6 +13,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.servlet.ModelAndView;
+import sdk.Tools.Util;
 
 import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
@@ -28,6 +32,7 @@ public class UPPRESSOController {
 
     BigInteger bigIntP = new BigInteger(Configuration.hexP,16);
     BigInteger bigIntID_RP = new BigInteger(Configuration.hexID_RP,16);
+    X9ECParameters ecp = SECNamedCurves.getByName("secp256k1");
 
 
     @RequestMapping(value = "/redir", method = RequestMethod.GET)
@@ -47,10 +52,12 @@ public class UPPRESSOController {
         JSONObject jsonRequestBody = JSONObject.parseObject(body);
         String t = jsonRequestBody.getString("t");
         LoginInstance loginInstance = new LoginInstance();
-        BigInteger bigIntT = new BigInteger(t);
-        BigInteger PID_RP = bigIntID_RP.modPow(bigIntT, bigIntP);
+
+        ECPoint PointClientId = ecp.getCurve().decodePoint(Util.hexString2Bytes(Configuration.hexID_RP));
+        String PClientID = Util.bytes2HexString(PointClientId.multiply(new BigInteger(t, 16)).getEncoded());
+
         loginInstance.setT(t);
-        loginInstance.setPID_RP(PID_RP.toString());
+        loginInstance.setPID_RP(PClientID);
         LoginInstanceManager.put(ID, loginInstance);
         JSONObject jsonResponseBody = new JSONObject();
         jsonResponseBody.put("result", "ok");

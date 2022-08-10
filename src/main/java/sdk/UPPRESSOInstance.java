@@ -1,6 +1,9 @@
 package sdk;
 
 import com.alibaba.fastjson.JSONObject;
+import org.bouncycastle.asn1.sec.SECNamedCurves;
+import org.bouncycastle.asn1.x9.X9ECParameters;
+import org.bouncycastle.math.ec.ECPoint;
 import org.springframework.web.servlet.ModelAndView;
 import sdk.Bean.Configuration;
 import sdk.Bean.LoginInstance;
@@ -24,7 +27,9 @@ import java.util.Base64;
 
 public class UPPRESSOInstance {
     BigInteger bigIntP = new BigInteger(Configuration.hexP,16);
-    BigInteger bigIntQ = new BigInteger(Configuration.hexQ,16);
+//    BigInteger bigIntQ = new BigInteger(Configuration.hexQ,16);
+    X9ECParameters ecp = SECNamedCurves.getByName("secp256k1");
+
 
     UPPRESSOToken UPPRESSOToken;
 
@@ -51,11 +56,12 @@ public class UPPRESSOInstance {
             }else {
                 UPPRESSOToken.setValid(false);
             }
-            BigInteger temp[] = ExtendEculid(new BigInteger(loginInstance.getT()), bigIntQ);
+            BigInteger temp[] = ExtendEculid(new BigInteger(loginInstance.getT(), 16), ecp.getN());
             BigInteger _result = temp[1];
-            BigInteger sub = new BigInteger(token.getSubject());
-            BigInteger userIdentity = sub.modPow(_result, bigIntP);
-            UPPRESSOToken.init(token, userIdentity.toString());
+            org.bouncycastle.math.ec.ECPoint pointPUID = ecp.getCurve().decodePoint(Util.hexString2Bytes(token.getSubject()));
+            ECPoint pointAccount = pointPUID.multiply(_result);
+            String account = Util.bytes2HexString(pointAccount.getEncoded());
+            UPPRESSOToken.init(token, account);
         }else {
             UPPRESSOToken.setValid(false);
         }

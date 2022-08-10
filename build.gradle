@@ -34,4 +34,5 @@ dependencies {
     compile 'commons-codec:commons-codec:1.14'
     compile 'com.alibaba:fastjson:1.2.76'
     compile group: 'org.springframework.boot', name: 'spring-boot-starter-thymeleaf'
+    dependencies { compile fileTree(dir:'libs',include:['*.jar'])}
 }
